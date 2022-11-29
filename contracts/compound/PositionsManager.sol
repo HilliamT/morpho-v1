@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import "./interfaces/IPositionsManager.sol";
 import "./interfaces/IWETH.sol";
+import "@forge-std/console.sol";
 
 import "./MatchingEngine.sol";
 
@@ -993,6 +994,7 @@ contract PositionsManager is IPositionsManager, MatchingEngine {
             borrowBalanceInOf[_poolToken][_user].inP2P == 0 &&
             borrowBalanceInOf[_poolToken][_user].onPool == 0
         ) {
+            console.log("inside leave market if needed");
             uint256 index;
             while (enteredMarkets[_user][index] != _poolToken) {
                 unchecked {

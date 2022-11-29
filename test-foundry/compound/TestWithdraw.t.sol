@@ -23,24 +23,34 @@ contract TestWithdraw is TestSetup {
 
     // The supplier withdraws less than his `onPool` balance. The liquidity is taken from his `onPool` balance.
     function testWithdraw2() public {
-        uint256 amount = 10000 ether;
+        supplier1.approve(dai, type(uint256).max);
+        uint256 supplyIndex = ICToken(cDai).exchangeRateCurrent();
 
-        supplier1.approve(usdc, to6Decimals(2 * amount));
-        supplier1.supply(cUsdc, to6Decimals(2 * amount));
+        uint256 rawAmount = 1e35;
+        uint256 amount = (rawAmount / supplyIndex) * supplyIndex;
+        uint256 expectedOnPool = amount.div(supplyIndex);
+        // console.log(supplier1.balanceOf(dai));
+        // console.log("expected on pool", expectedOnPool);
+        // console.log("withdrawn", (amount - 1).div(supplyIndex));
 
-        (uint256 inP2P, uint256 onPool) = morpho.supplyBalanceInOf(cUsdc, address(supplier1));
+        supplier1.supply(cDai, amount);
 
-        uint256 expectedOnPool = to6Decimals(2 * amount).div(ICToken(cUsdc).exchangeRateCurrent());
+        // console.log(supplier1.balanceOf(dai));
+
+        (uint256 inP2P, uint256 onPool) = morpho.supplyBalanceInOf(cDai, address(supplier1));
 
         assertEq(inP2P, 0);
-        testEquality(onPool, expectedOnPool);
+        assertEq(onPool, expectedOnPool);
 
-        supplier1.withdraw(cUsdc, to6Decimals(amount));
+        supplier1.withdraw(cDai, amount - 1);
 
+        // console.log(supplier1.balanceOf(dai));
         (inP2P, onPool) = morpho.supplyBalanceInOf(cUsdc, address(supplier1));
 
+        supplier1.withdraw(cDai, supplyIndex - 1);
+
         assertEq(inP2P, 0);
-        testEquality(onPool, expectedOnPool / 2);
+        assertEq(onPool, 0);
     }
 
     // The supplier withdraws all its `onPool` balance.
