@@ -29,28 +29,28 @@ contract TestWithdraw is TestSetup {
         uint256 rawAmount = 1e35;
         uint256 amount = (rawAmount / supplyIndex) * supplyIndex;
         uint256 expectedOnPool = amount.div(supplyIndex);
-        // console.log(supplier1.balanceOf(dai));
+        uint256 balanceBefore = supplier1.balanceOf(dai);
+        console.log(balanceBefore);
         // console.log("expected on pool", expectedOnPool);
         // console.log("withdrawn", (amount - 1).div(supplyIndex));
 
         supplier1.supply(cDai, amount);
-
-        // console.log(supplier1.balanceOf(dai));
 
         (uint256 inP2P, uint256 onPool) = morpho.supplyBalanceInOf(cDai, address(supplier1));
 
         assertEq(inP2P, 0);
         assertEq(onPool, expectedOnPool);
 
-        supplier1.withdraw(cDai, amount - 1);
+        supplier1.withdraw(cDai, amount - supplyIndex - 1);
+        supplier1.withdraw(cDai, type(uint256).max);
 
-        // console.log(supplier1.balanceOf(dai));
+        uint256 balanceAfter = supplier1.balanceOf(dai);
         (inP2P, onPool) = morpho.supplyBalanceInOf(cUsdc, address(supplier1));
-
-        supplier1.withdraw(cDai, supplyIndex - 1);
 
         assertEq(inP2P, 0);
         assertEq(onPool, 0);
+
+        assertLe(balanceAfter, balanceBefore);
     }
 
     // The supplier withdraws all its `onPool` balance.
